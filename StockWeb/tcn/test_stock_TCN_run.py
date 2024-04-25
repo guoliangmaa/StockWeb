@@ -5,18 +5,20 @@ import torch.nn as nn
 from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import TensorDataset
 
-from Config import config  # 从自定义的Config.py参数文件中插入
-from DataSplit import split_data  # 从DataSplit.py文件中导入split_data函数
-from train import fit  # 从自定义的train.py文件中插入训练模板fit函数
+# from Config import config  # 从自定义的Config.py参数文件中插入
+from .DataSplit import split_data  # 从DataSplit.py文件中导入split_data函数
+from .train import fit  # 从自定义的train.py文件中插入训练模板fit函数
+
 
 # 加载参数
-config = config()
+# config = config()
 
 
-def train_model():
+def train_model(config):
     import pandas as pd
     # 1.加载时间序列数据
     df = pd.read_csv(config.data_path, index_col=0)
+    print(df)
     df = df.fillna(0.0)  # 把数据中的NA空值制成0
     # df = pd.read_csv(config.data_path, index_col=[0, 1], usecols=lambda x: x not in [0, 1])
     # 2.将数据进行标准化
@@ -44,7 +46,7 @@ def train_model():
     test_loader = torch.utils.data.DataLoader(test_data, config.batch_size, False)
 
     # 7.载入模型、定义损失、定义优化器
-    from model_TCN import TCN
+    from .model_TCN import TCN
     model = TCN(config.input_size, config.output_size, config.num_channels, config.kernel_size, config.dropout)
 
     loss_function = nn.MSELoss()  # 定义损失函数
@@ -61,7 +63,8 @@ def train_model():
     test_loss = []
     bst_loss = np.inf
     for epoch in range(config.epochs):
-        epoch_loss, epoch_test_loss = fit(epoch, model, loss_function, optimizer, train_loader, test_loader, bst_loss)
+        epoch_loss, epoch_test_loss = fit(epoch, model, loss_function, optimizer, train_loader, test_loader, bst_loss,
+                                          config)
         # 将loss存进csv文件中
         list = [epoch_loss, epoch_test_loss]  # 创建存放loss的列表
         data = pd.DataFrame([list])
@@ -82,7 +85,8 @@ def train_model():
         plt.figure(figsize=(12, 8))
         model.eval()
         with torch.no_grad():
-            plt.plot(scaler.inverse_transform((model(x_train_tensor).detach().numpy().reshape(-1, 1)[: plot_size])), "b")
+            plt.plot(scaler.inverse_transform((model(x_train_tensor).detach().numpy().reshape(-1, 1)[: plot_size])),
+                     "b")
             plt.plot(scaler.inverse_transform(y_train_tensor.detach().numpy().reshape(-1, 1)[: plot_size]), "r")
             plt.legend()
             plt.show()
@@ -97,4 +101,4 @@ def train_model():
             plt.legend()
             plt.show()
 
-train_model()
+# train_model()

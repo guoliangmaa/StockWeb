@@ -20,10 +20,10 @@ def split_data(data, timestep, feature_size):
     train_size = int(np.round(0.8 * dataX.shape[0]))
 
     # 划分训练集、测试集
-    x_train = dataX[: train_size, :].reshape(-1, timestep, feature_size)
+    x_train = dataX[: train_size:].reshape(-1, timestep, feature_size)
     y_train = dataY[: train_size].reshape(-1, 1)
 
-    x_test = dataX[train_size:, :].reshape(-1, timestep, feature_size)
+    x_test = dataX[train_size::].reshape(-1, timestep, feature_size)
     y_test = dataY[train_size:].reshape(-1, 1)
 
     return [x_train, y_train, x_test, y_test]

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pandas import DataFrame
 
 
-def read_stock(stock_code, timestep=50) -> DataFrame:
+def read_stock(stock_code, timestep=50) -> tuple:
     global df, new_df
     ts.set_token("a20f27bc10acf078a49505b86f815ab3563f10c3613b085b4063e00a")
     pro = ts.pro_api()
@@ -21,10 +21,8 @@ def read_stock(stock_code, timestep=50) -> DataFrame:
                 print(df)
                 df = df.head(timestep)[::-1]
                 df.to_csv(f"csv/{code}.csv", index=False)
-                new_df = df[["open", "close", "high", "low", "vol", "pct_chg"]]
+                new_df = df[["trade_date", "open", "close", "high", "low", "vol", "pct_chg"]]
+                new_df.to_csv(f"csv/{code}_new.csv", index=False)
                 print(new_df)
-                break
-    return new_df
 
-
-# read_stock("000001")
+                return new_df, code

@@ -40,14 +40,14 @@
 #上面的模板不能改变训练的step,下面这个模板可以
 
 import torch
-from Config import config
+# from .Config import config
 from tqdm import tqdm  # 进度条
 import numpy as np
 
-config = config()
+# config = config()
 
 
-def fit(epoch, model, loss_function, optimizer, train_loader, test_loader, bst_loss):
+def fit(epoch, model, loss_function, optimizer, train_loader, test_loader, bst_loss, config):
     model.train()
     running_loss = 0
     train_bar = tqdm(train_loader)  # 形成进度条
