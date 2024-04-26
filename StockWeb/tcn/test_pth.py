@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler #数据处理
 import matplotlib.pyplot as plt #绘图
-from Config import config #从自定义的Config.py参数文件中插入
+from StockWeb.Config import config #从自定义的Config.py参数文件中插入
 from DataSplit import split_data #从自定义的DataSplit.py文件中导入split_data函数
 #加载参数
 config = config()

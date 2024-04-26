@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt #绘图
-from Config import config #从自定义的Config.py参数文件中插入
+from StockWeb.Config import config #从自定义的Config.py参数文件中插入
 
 # 加载参数
 config = config()
