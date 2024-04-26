@@ -21,7 +21,8 @@ def predict(df: DataFrame):
     scaler.fit_transform(np.array(df['close']).reshape(-1, 1))
 
     # 取数据中前50天的6个特征数据输入模型进行预测第51天的股票收盘价，可自行修改范围
-    test_ = data[:config.timestep]
+    # 因为数据已经是从头开始的了 所以应该是后50个
+    test_ = data[-config.timestep:]
     # reshape成适合模型输入的格式
     test = test_.reshape((1, config.timestep, config.input_size))
     # 其真实标签是50天后1天数据股票收盘价 小马注释

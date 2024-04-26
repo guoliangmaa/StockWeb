@@ -15,8 +15,7 @@ def create_dataset(data, time_step):
     return np.array(dataX), np.array(dataY)
 
 
-def cnn_predict(_config: config, origin_df: DataFrame):
-
+def lstm_predict(_config: config, origin_df: DataFrame):
     close_prices = origin_df['close'].values
     close_prices = close_prices.reshape(-1, 1)
 
@@ -26,17 +25,14 @@ def cnn_predict(_config: config, origin_df: DataFrame):
 
     time_step = _config.timestep  # 做了修改 原来直接设置为 10 现在用变量设置
     X, y = create_dataset(close_prices, time_step)
-    X = torch.from_numpy(X).float().reshape(-1, 1, time_step)
-    y = torch.from_numpy(y).float()
-
-    X, y = create_dataset(close_prices, time_step)
-    X = torch.from_numpy(X).float().reshape(-1, 1, time_step)
-    y = torch.from_numpy(y).float()
+    X = torch.from_numpy(X).float().reshape(-1, time_step, 1)
+    y = torch.from_numpy(y).float().reshape(-1, 1)
 
     model = torch.load(_config.save_path)
     print(model)
 
-    test_input = X[-1].reshape(1, 1, _config.timestep)
+    # 预测
+    test_input = X[-1].reshape(1, time_step, 1)
     predicted_price = model(test_input).detach().numpy().flatten()
     predicted_price = scaler.inverse_transform(predicted_price.reshape(-1, 1))
 

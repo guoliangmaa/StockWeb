@@ -12,7 +12,7 @@ class Config:
     model_name = 'TCN'  # 模型名称
     # save_path = './{}.pth'.format(model_name)  # 最优模型保存路径
     save_path = 'StockWeb/tcn/{}.pth'.format(model_name)  # 最优模型保存路径
-    learning_rate = 0.0001  # 学习率
+    learning_rate = 0.00001  # 学习率
     show_figure = False  # 是否显示结果图像
     stock_code = '000001'  # 股票代码
-    length = 365  # 看多少天以前的数据
+    length = 365 * 2  # 看多少天以前的数据

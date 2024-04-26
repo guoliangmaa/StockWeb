@@ -8,6 +8,8 @@ from StockWeb.Config import config
 from ..tcn.test_stock_TCN_run import train_model as tcn_train
 from ..cnn.train import cnn_train
 from ..cnn.predict import cnn_predict
+from ..lstm.train import lstm_train
+from ..lstm.predict import lstm_predict
 
 
 class TestView(APIView):
@@ -16,7 +18,7 @@ class TestView(APIView):
            "d": [],
            "predict": 0.0}
     retrain = True
-    epoch = 20
+    epoch = 100
     _config = config()
 
     def get(self, request):
@@ -26,7 +28,7 @@ class TestView(APIView):
         length = request.GET.get("length", 365)  # 看多少天以前的数据
 
         self._config.epochs = self.epoch
-        self._config.length = length
+        self._config.length = int(length)
         self._config.stock_code = stock_code
 
         # 获得DataFrame
@@ -34,11 +36,13 @@ class TestView(APIView):
         self._config.data_path = f"csv/{code}_new.csv"
         self._config.save_path = f"StockWeb/{model_name}/model.pth"
         if model_name == "tcn":
+            self._config.timestep = 50
             return self.model_tcn(self._config, df, origin_df)
         elif model_name == "cnn":
             self._config.timestep = 10  # 原本代码设置为10
             return self.model_cnn(self._config, origin_df)
         elif model_name == "lstm":
+            self._config.timestep = 10  # 原本代码设置为10
             return self.model_lstm(self._config, origin_df)
 
     def post(self, request):
@@ -54,7 +58,7 @@ class TestView(APIView):
 
         res = predict(df)
         self.msg["data"] = origin_df
-        self.msg["predict"] = res
+        self.msg["predict"] = res.item()
         return Response(data=self.msg)
 
     def model_cnn(self, _config: config, origin_df: DataFrame) -> Response:
@@ -62,11 +66,16 @@ class TestView(APIView):
             cnn_train(_config, origin_df)
 
         res = cnn_predict(_config, origin_df)
-        self.msg["predict"] = res
+        self.msg["predict"] = res.item()
         self.msg["data"] = origin_df
 
         return Response(data=self.msg)
 
     def model_lstm(self, _config: config, origin_df: DataFrame) -> Response:
+        if self.retrain:
+            lstm_train(_config, origin_df)
 
+        res = lstm_predict(_config, origin_df)
+        self.msg["predict"] = res.item()
+        self.msg["data"] = origin_df
         return Response(data=self.msg)
