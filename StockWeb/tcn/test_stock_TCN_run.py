@@ -56,7 +56,7 @@ def train_model(config):
     import pandas as pd
     # 创建loss.csv，记录loss
     df1 = pd.DataFrame(columns=['train_loss', 'test_loss'])  # 列名
-    df1.to_csv("./loss.csv", index=False)  # 路径可以根据需要更改
+    df1.to_csv("StockWeb/tcn/loss.csv", index=False)  # 路径可以根据需要更改
 
     # 8.开始训练
     train_loss = []
@@ -68,7 +68,7 @@ def train_model(config):
         # 将loss存进csv文件中
         list = [epoch_loss, epoch_test_loss]  # 创建存放loss的列表
         data = pd.DataFrame([list])
-        data.to_csv("./loss.csv", mode='a', header=False, index=False)
+        data.to_csv("StockWeb/tcn/loss.csv", mode='a', header=False, index=False)
         train_loss.append(epoch_loss)
         test_loss.append(epoch_test_loss)
     print('Finished Training')

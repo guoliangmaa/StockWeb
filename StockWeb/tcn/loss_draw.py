@@ -7,7 +7,7 @@ from StockWeb.Config import config #从自定义的Config.py参数文件中插�
 # 加载参数
 config = config()
 # 读取csv中指定列的数据
-data = pd.read_csv("./loss.csv")
+data = pd.read_csv("StockWeb/tcn/loss.csv")
 train_loss = data[['train_loss']]
 test_loss = data[['test_loss']]
 y1 =np.array(train_loss)#将DataFrame类型转化为numpy数组
