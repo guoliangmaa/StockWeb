@@ -32,9 +32,11 @@ class TestView(APIView):
         self._config.stock_code = stock_code
 
         # 获得DataFrame
-        df, origin_df, code = read_stock(self._config.stock_code, self._config.length)
+        df, origin_df, code, next_day = read_stock(self._config.stock_code, self._config.length)
         self._config.data_path = f"csv/{code}_new.csv"
         self._config.save_path = f"StockWeb/{model_name}/model.pth"
+        self._config.next_day = next_day
+
         if model_name == "tcn":
             self._config.timestep = 50
             return self.model_tcn(self._config, df, origin_df)
@@ -59,7 +61,10 @@ class TestView(APIView):
         res = predict(df)
         self.msg["data"] = origin_df
         self.msg["predict"] = res.item()
-        return Response(data=self.msg)
+        self.msg["next_day"] = _config.next_day
+        response = Response(data=self.msg)
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
 
     def model_cnn(self, _config: config, origin_df: DataFrame) -> Response:
         if self.retrain:
@@ -68,8 +73,10 @@ class TestView(APIView):
         res = cnn_predict(_config, origin_df)
         self.msg["predict"] = res.item()
         self.msg["data"] = origin_df
-
-        return Response(data=self.msg)
+        self.msg["next_day"] = _config.next_day
+        response = Response(data=self.msg)
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
 
     def model_lstm(self, _config: config, origin_df: DataFrame) -> Response:
         if self.retrain:
@@ -78,4 +85,7 @@ class TestView(APIView):
         res = lstm_predict(_config, origin_df)
         self.msg["predict"] = res.item()
         self.msg["data"] = origin_df
-        return Response(data=self.msg)
+        self.msg["next_day"] = _config.next_day
+        response = Response(data=self.msg)
+        response['Access-Control-Allow-Origin'] = "*"
+        return response

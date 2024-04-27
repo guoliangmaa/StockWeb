@@ -1,4 +1,3 @@
-
 class Config:
     data_path = 'StockWeb/cnn/sh300_test.csv'
     timestep = 50  # 滑窗大小
@@ -16,3 +15,4 @@ class Config:
     show_figure = False  # 是否显示结果图像
     stock_code = '000001'  # 股票代码
     length = 365 * 2  # 看多少天以前的数据
+    next_day = ''
