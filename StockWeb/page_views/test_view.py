@@ -18,7 +18,7 @@ class TestView(APIView):
            "d": [],
            "predict": 0.0}
     retrain = True
-    epoch = 100
+    epoch = 600
     _config = config()
 
     def get(self, request):
