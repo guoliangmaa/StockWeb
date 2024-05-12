@@ -18,13 +18,13 @@ class TestView(APIView):
            "d": [],
            "predict": 0.0}
     retrain = True
-    epoch = 600
+    epoch = 100
     _config = config()
 
     def get(self, request):
         print(request)
         stock_code = request.GET.get("stock_code", "000001")  # 股票代码
-        model_name = request.GET.get("model", "tcn")  # 模型选择
+        model_name = request.GET.get("model", "tcn").lower()  # 模型选择 默认都小写
         length = request.GET.get("length", 365)  # 看多少天以前的数据
 
         self._config.epochs = self.epoch
