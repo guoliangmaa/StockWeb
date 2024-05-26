@@ -8,3 +8,4 @@
 > pip install scikit-learn  
 > pip install matplotlib  
 > pip install yfinance
+> pip install tushare sqlalchemy pymysql

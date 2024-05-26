@@ -2,18 +2,18 @@ import torch
 import numpy as np
 from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler  # 数据处理
-from StockWeb.Config import config  # 从自定义的Config.py参数文件中插入
+from StockWeb.utils.Config import config as Config  # 从自定义的Config.py参数文件中插入
 from .model_TCN import TCN
 
 # 加载参数
 
-config = config()
+# config = config()
 # 加载时间序列数据
 # df = pd.read_csv(config.data_path, index_col=0)
 # df = df.fillna(0.0)  # 把数据中的NA空值制成0
 
 
-def predict(df: DataFrame):
+def predict(df: DataFrame, config: Config):
     # 将数据进行标准化
     scaler = MinMaxScaler()
     scaler_model = MinMaxScaler()

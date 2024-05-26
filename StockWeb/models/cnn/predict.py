@@ -3,7 +3,7 @@ import torch
 from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
 
-from ..Config import config
+from StockWeb.utils.Config import config
 
 
 def create_dataset(data, time_step):
