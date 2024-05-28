@@ -2,8 +2,8 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-
-class StockView(APIView):
+# 此控制器返回推荐的股票数据
+class RecommendStockView(APIView):
     renderer_classes = [JSONRenderer]
     msg = {"msg": "success",
            "d": [],
@@ -17,6 +17,8 @@ class StockView(APIView):
 
         if request.get_full_path() == self.api_get_stock:
             self.get_data(self, request)
+        else:
+            return Response(data=self.msg)
 
 
     def post(self, request):

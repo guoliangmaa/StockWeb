@@ -33,7 +33,7 @@ def cnn_predict(_config: config, origin_df: DataFrame):
     X = torch.from_numpy(X).float().reshape(-1, 1, time_step)
     y = torch.from_numpy(y).float()
 
-    model = torch.load(_config.save_path)
+    model = torch.load(_config.save_path).to(torch.device("cpu"))
     print(model)
 
     test_input = X[-1].reshape(1, 1, _config.timestep)

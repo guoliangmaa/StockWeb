@@ -33,7 +33,7 @@ def predict(df: DataFrame, config: Config):
     # 载入模型和参数
     model = TCN(config.input_size, config.output_size, config.num_channels, config.kernel_size, config.dropout)
     model.load_state_dict(torch.load(config.save_path))
-
+    model.to(torch.device("cpu"))
     # 消除dropout层的影响
     model = model.eval()
     # 将数据输入模型进行预测并反归一化

@@ -28,7 +28,7 @@ def lstm_predict(_config: config, origin_df: DataFrame):
     X = torch.from_numpy(X).float().reshape(-1, time_step, 1)
     y = torch.from_numpy(y).float().reshape(-1, 1)
 
-    model = torch.load(_config.save_path)
+    model = torch.load(_config.save_path).to(torch.device("cpu"))
     print(model)
 
     # 预测

@@ -48,6 +48,9 @@ import numpy as np
 
 
 def fit(epoch, model, loss_function, optimizer, train_loader, test_loader, bst_loss, config):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+
     model.train()
     running_loss = 0
     train_bar = tqdm(train_loader)  # 形成进度条
@@ -59,6 +62,7 @@ def fit(epoch, model, loss_function, optimizer, train_loader, test_loader, bst_l
             break
 
         x_train, y_train = data  # 取出数据中的X和Y
+        x_train, y_train = x_train.to(device), y_train.to(device)  # 将数据移动到GPU上
         optimizer.zero_grad()  # 梯度初始化为零
         y_train_pred = model(x_train)  # 前向传播求出预测的值
         loss = loss_function(y_train_pred, y_train.reshape(-1, 1))  # 计算每个batch的loss
@@ -76,6 +80,7 @@ def fit(epoch, model, loss_function, optimizer, train_loader, test_loader, bst_l
         test_bar = tqdm(test_loader)  # 形成进度条
         for data in test_bar:
             x_test, y_test = data  # 取出数据中的X和Y
+            x_test, y_test = x_test.to(device), y_test.to(device)  # 将数据移动到GPU上
             y_test_pred = model(x_test)  # 求出预测的值
             test_loss = loss_function(y_test_pred, y_test.reshape(-1, 1))  # 计算每个batch的loss
             test_running_loss += test_loss.item()

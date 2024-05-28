@@ -3,9 +3,12 @@ import torch
 import torch.nn as nn
 from pandas import DataFrame
 from sklearn.preprocessing import MinMaxScaler
+from torch.utils.data import TensorDataset, DataLoader
 
 from .CNNModel import CNNModel
 from StockWeb.utils.Config import config
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # 创建数据集
@@ -32,17 +35,34 @@ def cnn_train(_config: config, origin_df: DataFrame):
     X = torch.from_numpy(X).float().reshape(-1, 1, time_step)
     y = torch.from_numpy(y).float()
 
-    model = CNNModel()
+    # 创建数据加载器
+    batch_size = 128
+    dataset = TensorDataset(X, y)
+    train_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    model = CNNModel().to(device)
     loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
     # 训练模型
     num_epochs = _config.epochs  # 与原本做了修改 用变量代替
+    # for epoch in range(num_epochs):
+    #     for i in range(len(X)):
+    #         output = model(X[i:i + 1])
+    #         loss = loss_function(output, y[i:i + 1])
+    #         optimizer.zero_grad()
+    #         loss.backward()
+    #         optimizer.step()
+    #     if epoch % 10 == 0:
+    #         print(f'Epoch {epoch} Loss: {loss.item()}')
+
     for epoch in range(num_epochs):
-        for i in range(len(X)):
-            output = model(X[i:i + 1])
-            loss = loss_function(output, y[i:i + 1])
+        model.train()
+        for batch_x, batch_y in train_loader:
+            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
             optimizer.zero_grad()
+            output = model(batch_x)
+            loss = loss_function(output, batch_y)
             loss.backward()
             optimizer.step()
         if epoch % 10 == 0:

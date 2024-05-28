@@ -16,11 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path
-from .views import test_view, stock_view
+from .views import test_view, recommend_stock_view
 
 base_url = "api/"
 urlpatterns = [
     path("admin/", admin.site.urls),
     re_path("api/test", test_view.TestView.as_view()),
-    re_path("api/stock", stock_view.StockView.as_view()),
+    path("api/stock/recommend", recommend_stock_view.RecommendStockView.as_view()),
 ]
