@@ -8,9 +8,10 @@ from StockWeb.utils.Config import config
 from StockWeb.models.tcn.test_stock_TCN_run import train_model as tcn_train
 from StockWeb.models.cnn.train import cnn_train
 from StockWeb.models.cnn.predict import cnn_predict
-from StockWeb.models.lstm.train import lstm_train
-from StockWeb.models.lstm.predict import lstm_predict
-
+# from StockWeb.models.lstm.train import lstm_train
+# from StockWeb.models.lstm.predict import lstm_predict
+from StockWeb.models.lstm.train_and_predict import lstm_train_using_high_and_low
+from StockWeb.models.lstm.train_and_predict import lstm_predict
 
 class TestView(APIView):
     renderer_classes = [JSONRenderer]
@@ -18,7 +19,7 @@ class TestView(APIView):
            "d": [],
            "predict": 0.0}
     retrain = True
-    epoch = 100
+    epoch = 200
     _config = config()
 
     def get(self, request):
@@ -80,10 +81,14 @@ class TestView(APIView):
 
     def model_lstm(self, _config: config, origin_df: DataFrame) -> Response:
         if self.retrain:
-            lstm_train(_config, origin_df)
+            # lstm_train(_config, origin_df)
+            lstm_train_using_high_and_low(_config, origin_df)
 
-        res = lstm_predict(_config, origin_df)
-        self.msg["predict"] = res.item()
+        predict_high, predict_low  = lstm_predict(_config, origin_df)
+
+        self.msg["predict_high"] = predict_high.item()
+        self.msg["predict_low"] = predict_low.item()
+        self.msg["predict"] = (predict_high.item() + predict_low.item()) / 2
         self.msg["data"] = origin_df
         self.msg["next_day"] = _config.next_day
         response = Response(data=self.msg)

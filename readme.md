@@ -9,3 +9,8 @@
 > pip install matplotlib  
 > pip install yfinance
 > pip install tushare sqlalchemy pymysql
+
+
+---
+服务器部署命令
+> nohup python manage.py runserver 0.0.0.0:8080 &> output.log &
