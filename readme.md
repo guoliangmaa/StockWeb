@@ -7,8 +7,11 @@
 > pip install tushare (股票数据获取)  
 > pip install scikit-learn  
 > pip install matplotlib  
-> pip install yfinance
-> pip install tushare sqlalchemy pymysql
+> pip install yfinance  
+> pip install sqlalchemy pymysql  
+> pip install chinesecalendar (应该每年更新该包 11月前后国务院发布通知)   
+> 
+
 
 
 ---

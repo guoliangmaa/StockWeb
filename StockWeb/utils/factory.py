@@ -5,7 +5,7 @@ from tushare.pro.client import DataApi
 
 def get_tushare() -> DataApi:
     # 设置Tushare的token
-    ts.set_token('2b029b986295fc98ff15e5dabfaa64cb48c5718d2268ec4d50319f90')
+    ts.set_token('a20f27bc10acf078a49505b86f815ab3563f10c3613b085b4063e00a')
     pro = ts.pro_api()
     return pro
 
