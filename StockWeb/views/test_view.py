@@ -1,4 +1,5 @@
 from pandas import DataFrame
+import pandas as pd
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -58,7 +59,7 @@ class TestView(APIView):
         elif model_name == "lstm":
             self._config.timestep = 10  # 原本代码设置为10
             # return self.model_lstm(self._config, origin_df)
-            return self.model_lstm_enhanced(self._config, origin_df)
+            return self.model_lstm_new(self._config, origin_df)
 
     def post(self, request):
         print("这是一个post请求")
@@ -120,21 +121,21 @@ class TestView(APIView):
             # 如果获取的最新数据 比 数据库中的新
             for row in origin_df.itertuples():
                 if self.history["trade_date"][-1] < row.ts_code:
-                    new_row = {}
-                    new_row["ts_code"] = row.ts_code
-                    new_row["trade_date"] = row.trade_date
-                    new_row["open"] = row.open
-                    new_row["close"] = row.close
-                    new_row["high"] = row.high
-                    new_row["low"] = row.low
-                    new_row["pre_close"] = row.pre_close
-                    new_row["change"] = row.change
-                    new_row["pct_chg"] = row.pct_chg
-                    new_row["vol"] = row.vol
-                    new_row["amount"] = row.amount
-
-                    new_row["predict_high"] = -1
-                    new_row["predict_low"] = -1
+                    new_row = {
+                        "ts_code": row.ts_code,
+                        "trade_date": row.trade_date,
+                        "open": row.open,
+                        "close": row.close,
+                        "high": row.high,
+                        "low": row.low,
+                        "pre_close": row.pre_close,
+                        "change": row.change,
+                        "pct_chg": row.pct_chg,
+                        "vol": row.vol,
+                        "amount": row.amount,
+                        "predict_high": -1,
+                        "predict_low": -1
+                    }
                     self.history.append(new_row)
 
         if self.retrain:
@@ -142,6 +143,7 @@ class TestView(APIView):
 
         # 这个循环可以预测 历史 和 未来一天 的股票
         arr = []
+        print(self.history)
         for i in range(61, 121):
             test_data = self.history.head(i)
             last_date = test_data.tail(1)["trade_date"].values[0]
@@ -157,6 +159,90 @@ class TestView(APIView):
             self.history.loc[row_index, "predict_low"] = low
         print(self.history)
         print(arr)
+        response = Response(data=self.msg)
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
+
+    def model_lstm_new(self, _config: config, origin_df: DataFrame) -> Response:
+
+        append_date = []
+        if self.history is None or self.history.empty:
+            self.history = origin_df.tail(120).reset_index(drop=True)
+            self.history.loc[:, "predict_high"] = -1
+            self.history.loc[:, "predict_low"] = -1
+        else:
+            for row in origin_df.itertuples():
+                if self.history["trade_date"].iloc[-1] < row.trade_date:
+                    new_row = {
+                        "ts_code": row.ts_code,
+                        "trade_date": row.trade_date,
+                        "open": row.open,
+                        "close": row.close,
+                        "high": row.high,
+                        "low": row.low,
+                        "pre_close": row.pre_close,
+                        "change": row.change,
+                        "pct_chg": row.pct_chg,
+                        "vol": row.vol,
+                        "amount": row.amount,
+                        "predict_high": -1,
+                        "predict_low": -1
+                    }
+                    self.history = self.history.append(new_row, ignore_index=True)
+
+        if self.retrain:
+            lstm_train_using_high_and_low(_config, self.history[["high", "low"]])
+
+        arr = []
+        errors = []
+        # print(self.history)
+        # 预测历史数据，从第62天开始预测
+        for i in range(61, len(self.history)):
+            test_data = self.history.iloc[:i]  # 左闭右开 所以是前 i-1 天
+            # print(test_data)
+            actual_high = self.history.iloc[i]["high"]
+            actual_low = self.history.iloc[i]["low"]
+            high, low = lstm_predict(_config, test_data)
+            last_date = self.history.iloc[i]["trade_date"]
+            # print(last_date)
+            arr.append([last_date, high, low])
+            error_high = abs(high - actual_high)
+            error_low = abs(low - actual_low)
+            errors.append({"date": last_date, "error_high": error_high, "error_low": error_low})
+            self.history.at[i, "predict_high"] = high
+            self.history.at[i, "predict_low"] = low
+        for t in range(len(self.history)):
+            print(f"date is {self.history.iloc[t]['trade_date'] } predict_high is {self.history.iloc[t]['predict_high']}")
+        print(self.history)
+        # 预测未来三天
+        last_date = self.history.iloc[-1]["trade_date"]
+        for _ in range(3):
+            print(last_date)
+            test_data = self.history
+            high, low = lstm_predict(_config, test_data)
+            nxt_workday = next_workday_str(last_date)
+            new_row = pd.DataFrame({
+                "ts_code": [_config.stock_code],
+                "high": [high],
+                "low": [low],
+                "close": [(high + low) / 2],
+                "open": [(high + low) / 2],
+                "trade_date": [nxt_workday],
+                "predict_high": [high],
+                "predict_low": [low]
+            })
+            # self.history = self.history.append(new_row, ignore_index=True)
+            self.history = pd.concat([self.history, new_row], ignore_index=True)
+            arr.append([nxt_workday, high, low])
+            last_date = nxt_workday
+        for t in range(len(self.history)):
+            print(f"date is {self.history.iloc[t]['trade_date']} predict_high is {self.history.iloc[t]['predict_high']}")
+
+        self.history.replace([float('inf'), float('-inf')], float('nan'), inplace=True)
+        self.history.fillna(0, inplace=True)
+        self.msg["predictions"] = arr
+        self.msg["errors"] = errors
+        self.msg["data"] = self.history.to_dict(orient='records')
         response = Response(data=self.msg)
         response['Access-Control-Allow-Origin'] = "*"
         return response

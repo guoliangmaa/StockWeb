@@ -14,17 +14,17 @@ def read_stock(stock_code, length=365 * 2) -> tuple:
         for item in arr:
             code = stock_code
             code = code + item
-            print(code)
+            # print(code)
             df = pro.daily(ts_code=code, start_date=begin_time.strftime("%Y%m%d"), end_date=end_time.strftime("%Y%m%d"))
             if not df.empty:
-                print(df)
+                # print(df)
                 early_day = df["trade_date"][0]
                 today = datetime.today().strftime("%Y%m%d")
                 next_day = (datetime.today() + timedelta(days=1)).strftime("%Y%m%d")
                 if early_day < today:
                     next_day = today
                 print(next_day)
-                df = df.head(length)[::-1]  # 获取的数据是按照时间降序的 需要重排
+                df = df.head(length).iloc[::-1].reset_index(drop=True)  # 获取的数据是按照时间降序的 需要重排
                 # df.to_csv(f"csv/{code}.csv", index=False)
                 csv_df = df[["trade_date", "open", "close", "high", "low", "vol", "pct_chg"]]
                 # csv_df.to_csv(f"csv/{code}_new.csv", index=False)
