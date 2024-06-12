@@ -23,7 +23,7 @@ class TestView(APIView):
            "d": [],
            "predict": 0.0}
     retrain = True
-    epoch = 200
+    epoch = 400
     _config = config()
     history: DataFrame | None = None
 
@@ -242,7 +242,7 @@ class TestView(APIView):
         self.history.fillna(0, inplace=True)
         self.msg["predictions"] = arr
         self.msg["errors"] = errors
-        self.msg["data"] = self.history.to_dict(orient='records')
+        self.msg["data"] = self.history
         response = Response(data=self.msg)
         response['Access-Control-Allow-Origin'] = "*"
         return response
