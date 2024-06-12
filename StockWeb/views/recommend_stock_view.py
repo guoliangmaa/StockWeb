@@ -1,6 +1,10 @@
+from datetime import datetime
+
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from StockWeb.utils.factory import get_mysql_engine
 
 
 # 此控制器返回推荐的股票数据
@@ -15,11 +19,11 @@ class RecommendStockView(APIView):
 
     def get(self, request):
         print(f"Get method, path = {request.get_full_path()}")
-
-        if request.get_full_path() == self.api_get_stock:
-            self.get_data(self, request)
-        else:
-            return Response(data=self.msg)
+        engin = get_mysql_engine(database="predict_stock")
+        sql = f'select * from recommend where date={datetime.today().strftime("%Y%m%d")}'
+        with engin.connect() as connection:
+            connection.execute(sql)
+        return Response(data=self.msg)
 
     def post(self, request):
         print(f"post method, path = {request.get_full_path()}")

@@ -39,7 +39,7 @@ def lstm_train_using_high_and_low(_config: config, df: DataFrame):
     # 把模型放到GPU上
     model_high.to(device)
     model_low.to(device)
-
+    print(device)
     # 使用最高价和最低价的平均值
     high_price = df['high'].values.reshape(-1, 1)
     low_price = df['low'].values.reshape(-1, 1)
