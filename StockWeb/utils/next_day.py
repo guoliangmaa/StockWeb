@@ -22,3 +22,13 @@ def is_weekend(date: datetime):
     day_of_week = date.weekday()
     # 判断是否是周六（5）或周日（6）
     return day_of_week == 5 or day_of_week == 6
+
+
+def recent_workday(time: datetime | str, f="%Y%m%d") -> str:
+    """返回最近一个工作日"""
+    if isinstance(time, str):
+        time = datetime.strptime(time, f)
+    while is_holiday(time) or is_weekend(time):
+        time = time - timedelta(days=1)
+
+    return time.strftime(f)

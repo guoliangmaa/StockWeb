@@ -15,7 +15,7 @@ from StockWeb.models.lstm.train_and_predict import lstm_train_using_high_and_low
 from StockWeb.models.lstm.train_and_predict import lstm_predict
 from StockWeb.utils.database import insert, select
 from StockWeb.utils.next_day import next_workday, next_workday_str
-
+from StockWeb.utils.read_recommend_stock import recommend_stock
 
 class TestView(APIView):
     renderer_classes = [JSONRenderer]
@@ -44,11 +44,25 @@ class TestView(APIView):
         self._config.data_path = f"csv/{code}_new.csv"
         self._config.save_path = f"StockWeb/models/{model_name}/model.pth"
         self._config.next_day = next_day
-        try:
-            self.history = select(f"select * from {code} order by trade_date desc")
-        except Exception:
-            self.history = None  # 为了防止多次请求导致数据混乱
-            print("数据库中未存在历史数据")
+
+        saved_recommend = recommend_stock()
+        for item in saved_recommend:
+            id, _date, _code, df = item
+            # print(f"id: {id}, date: {_date}, code: {code}, df: {df}")
+            # print(_code)
+            print(item)
+            print(type(item))
+            if item["code"] == code:
+                print(f"该股票 {code} 已在每日预测中计算过 无需重复训练")
+                self.msg["data"] = item["df"]
+                response = Response(data=self.msg)
+                response['Access-Control-Allow-Origin'] = "*"
+                return response
+        # try:
+        #     self.history = select(f"select * from {code} order by trade_date desc")
+        # except Exception:
+        #     self.history = None  # 为了防止多次请求导致数据混乱
+        #     print("数据库中未存在历史数据")
 
         if model_name == "tcn":
             self._config.timestep = 50

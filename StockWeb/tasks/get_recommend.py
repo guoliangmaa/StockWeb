@@ -7,7 +7,7 @@ from sqlalchemy import text
 from StockWeb.utils.factory import get_tushare, get_mysql_engine
 from StockWeb.models.lstm.train_and_predict import lstm_train_using_high_and_low, lstm_predict
 from StockWeb.utils.Config import config
-from StockWeb.utils.next_day import next_workday_str
+from StockWeb.utils.next_day import next_workday_str, recent_workday
 
 ts = get_tushare()
 today = datetime.today().strftime("%Y%m%d")
@@ -16,24 +16,25 @@ begin = (datetime.today() - timedelta(days=240)).strftime("%Y%m%d")
 
 def run():
     # 首先需要获取所有的股票代码
-    data = ts.daily(trade_date=today)
+    data = ts.stock_basic()
+    # print(data)
     stock_code_list = data["ts_code"].values
     length = len(stock_code_list)
-    print(stock_code_list)
+    # print(stock_code_list)
 
     res_json = []
     stock_count = 0
     unique_list = set()
 
-    while stock_count < 1:
+    while stock_count < 10:
         idx = random.randint(1, length)
         if idx not in unique_list:
             code = stock_code_list[idx]
             df = predict_future(code)
-            if is_recommended_easy(df) or True:
-                print(df)
+            if is_recommended_easy(df):
+                # print(df)
                 stock_count += 1
-                print(f"股票 {code} 值的购买")
+                print(f"股票 {code} 值得购买")
                 res_json.append((today, code, df))
     sql = text("insert into recommend (date, stock_code, data) values (:date, :stock_code, :data)")
     sql_parameter = []
@@ -47,21 +48,35 @@ def run():
         }
         sql_parameter.append(dat)
     engin = get_mysql_engine(database="predict_stock")
+
     with engin.connect() as connection:
+        # print(connection)
         connection.execute(sql, sql_parameter)
+        connection.commit()
+        # res = connection.execute("select * from recommend")
 
 
 def predict_future(stock_code: str, future: int = 3) -> DataFrame:
     df: DataFrame = ts.daily(ts_code=stock_code, start_date=begin, end_date=today)
     _config = config()
     _config.stock_code = stock_code
-    _config.epochs = 100
+    _config.epochs = 400
     _config.timestep = 10
-    df = df.iloc[::-1].reset_index(drop=True)
+    df = df.iloc[::-1].tail(120).reset_index(drop=True)
 
     lstm_train_using_high_and_low(_config, df)
 
     last_date = df.iloc[-1]["trade_date"]
+    df.loc[:, "predict_high"] = -1
+    df.loc[:, "predict_low"] = -1
+
+    for i in range(int(len(df)/2), len(df)):
+        test_data = df.iloc[:i]  # 左闭右开 所以是前 i-1 天
+        high, low = lstm_predict(_config, test_data)
+        last_date = df.iloc[i]["trade_date"]
+        df.at[i, "predict_high"] = high
+        df.at[i, "predict_low"] = low
+
     for _ in range(future):
         print(last_date)
         test_data = df
@@ -88,8 +103,8 @@ def is_recommended(df: DataFrame, future: int = 3) -> bool:
     for i in range(future):
         tdy = sub.iloc[i]["high"]
         nxt = sub.iloc[i + 1]["high"]
-        print(f"{sub.iloc[i]['trade_date']} 天的价格为 {tdy}, {sub.iloc[i + 1]['trade_date']}天的价格为 {nxt}")
-        if not nxt > tdy:
+        # print(f"{sub.iloc[i]['trade_date']} 天的价格为 {tdy}, {sub.iloc[i + 1]['trade_date']}天的价格为 {nxt}")
+        if not tdy > nxt:
             return False
     return True
 
@@ -100,7 +115,7 @@ def is_recommended_easy(df: DataFrame, future: int = 3) -> bool:
     head = sub.iloc[0]["high"]
     end = sub.iloc[future]["high"]
 
-    print(f"当前价格{head} 预测未来{future}天价格 {end}")
+    # print(f"当前价格{head} 预测未来{future}天价格 {end}")
     return end > head
 
 
