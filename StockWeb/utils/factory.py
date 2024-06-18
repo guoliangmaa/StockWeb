@@ -10,22 +10,24 @@ def get_tushare() -> DataApi:
     return pro
 
 
-def get_mysql_engine(
-        user='root',
-        password='',
-        host='127.0.0.1',
-        port='3306',
-        database='stock',
-):
-    # 创建数据库引擎
+def get_mysql_engine(database: str = 'predict_stock'):
+    # 创建数据库引擎 修改数据库时在此修改即可
+    return remote_engine_instance(database)
+
+
+def local_engine_instance(database: str = "predict_stock"):
+    user = 'root'
+    password = ''
+    host = '127.0.0.1'
+    port = '3306'
+
     return create_engine(f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}')
 
 
-local_engine_instance = get_mysql_engine()
-remote_engine_instance = get_mysql_engine(
-    user='root',
-    password='',
-    host='127.0.0.1',
-    port='3306',
-    database='stock',
-)
+def remote_engine_instance(database: str = "predict_stock"):
+    port = '3306'
+    user = "predict_stock"
+    password = "TFDRASew3HNt8imP"
+    host = "8.141.5.241"
+
+    return create_engine(f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}')
