@@ -15,7 +15,8 @@ from StockWeb.models.lstm.train_and_predict import lstm_train_using_high_and_low
 from StockWeb.models.lstm.train_and_predict import lstm_predict
 from StockWeb.utils.database import insert, select
 from StockWeb.utils.next_day import next_workday, next_workday_str
-from StockWeb.utils.read_recommend_stock import recommend_stock
+from StockWeb.utils.database_stock import recommend_stock, stock_meta
+
 
 class TestView(APIView):
     renderer_classes = [JSONRenderer]
@@ -45,9 +46,13 @@ class TestView(APIView):
         self._config.save_path = f"StockWeb/models/{model_name}/model.pth"
         self._config.next_day = next_day
 
+        # 获取股票所对应的名称
+        self.msg["meta"] = stock_meta(code)
+
+        # 判断是否位于每日推荐 如果是 则不用重复训练预测
         saved_recommend = recommend_stock()
         for item in saved_recommend:
-            id, _date, _code, df = item
+            id, _date, _code, name, df = item
             # print(f"id: {id}, date: {_date}, code: {code}, df: {df}")
             # print(_code)
             print(item)
@@ -226,7 +231,8 @@ class TestView(APIView):
             self.history.at[i, "predict_high"] = high
             self.history.at[i, "predict_low"] = low
         for t in range(len(self.history)):
-            print(f"date is {self.history.iloc[t]['trade_date'] } predict_high is {self.history.iloc[t]['predict_high']}")
+            print(
+                f"date is {self.history.iloc[t]['trade_date']} predict_high is {self.history.iloc[t]['predict_high']}")
         print(self.history)
         # 预测未来三天
         last_date = self.history.iloc[-1]["trade_date"]
@@ -250,7 +256,8 @@ class TestView(APIView):
             arr.append([nxt_workday, high, low])
             last_date = nxt_workday
         for t in range(len(self.history)):
-            print(f"date is {self.history.iloc[t]['trade_date']} predict_high is {self.history.iloc[t]['predict_high']}")
+            print(
+                f"date is {self.history.iloc[t]['trade_date']} predict_high is {self.history.iloc[t]['predict_high']}")
 
         self.history.replace([float('inf'), float('-inf')], float('nan'), inplace=True)
         self.history.fillna(0, inplace=True)

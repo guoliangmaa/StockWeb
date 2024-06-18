@@ -6,7 +6,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from sqlalchemy import text
 from StockWeb.utils.factory import get_mysql_engine
-from StockWeb.utils.read_recommend_stock import recommend_stock
+from StockWeb.utils.database_stock import recommend_stock
+
 
 # 此控制器返回推荐的股票数据
 class RecommendStockView(APIView):

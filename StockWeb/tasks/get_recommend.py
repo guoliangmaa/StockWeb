@@ -13,12 +13,15 @@ ts = get_tushare()
 today = datetime.today().strftime("%Y%m%d")
 begin = (datetime.today() - timedelta(days=240)).strftime("%Y%m%d")
 
+# 首先需要获取所有的股票代码
+data = ts.stock_basic()
+
+
+# print(data)
 
 def run():
-    # 首先需要获取所有的股票代码
-    data = ts.stock_basic()
-    # print(data)
     stock_code_list = data["ts_code"].values
+    stock_name_list = data["name"].values
     length = len(stock_code_list)
     # print(stock_code_list)
 
@@ -26,28 +29,34 @@ def run():
     stock_count = 0
     unique_list = set()
 
+    # 将基础数据存入数据库中
+    engin = get_mysql_engine(database="predict_stock")
+    data.to_sql(name="stock_basic", con=engin, if_exists="replace")
+
     while stock_count < 10:
         idx = random.randint(1, length)
         if idx not in unique_list:
             code = stock_code_list[idx]
+            name = stock_name_list[idx]
             df = predict_future(code)
             if is_recommended_easy(df):
                 # print(df)
                 stock_count += 1
                 print(f"股票 {code} 值得购买")
-                res_json.append((today, code, df))
-    sql = text("insert into recommend (date, stock_code, data) values (:date, :stock_code, :data)")
+                res_json.append((today, code, name, df))
+    sql = text(
+        "insert into recommend (date, stock_code, stock_name, data) values (:date, :stock_code, :stock_name, :data)")
     sql_parameter = []
     for item in res_json:
-        date, stock_code, df = item
+        date, stock_code, stock_name, df = item
         df_string = df.to_csv(index=False)
         dat = {
             "date": date,
             "stock_code": stock_code,
+            "stock_name": stock_name,
             "data": df_string
         }
         sql_parameter.append(dat)
-    engin = get_mysql_engine(database="predict_stock")
 
     with engin.connect() as connection:
         # print(connection)
@@ -70,7 +79,7 @@ def predict_future(stock_code: str, future: int = 3) -> DataFrame:
     df.loc[:, "predict_high"] = -1
     df.loc[:, "predict_low"] = -1
 
-    for i in range(int(len(df)/2), len(df)):
+    for i in range(int(len(df) / 2), len(df)):
         test_data = df.iloc[:i]  # 左闭右开 所以是前 i-1 天
         high, low = lstm_predict(_config, test_data)
         last_date = df.iloc[i]["trade_date"]
