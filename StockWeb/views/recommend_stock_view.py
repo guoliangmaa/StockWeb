@@ -25,7 +25,9 @@ class RecommendStockView(APIView):
         print(result)
 
         self.msg["data"] = result
-        return Response(data=self.msg)
+        response = Response(data=self.msg)
+        response['Access-Control-Allow-Origin'] = "*"
+        return response
 
     def post(self, request):
         print(f"post method, path = {request.get_full_path()}")

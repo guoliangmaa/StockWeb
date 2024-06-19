@@ -125,4 +125,10 @@ def lstm_predict(_config: config, df: DataFrame):
     if predicted_low_price.item() > predicted_high_price.item():
         predicted_high_price, predicted_low_price = predicted_low_price, predicted_high_price
 
-    return predicted_high_price.item(), predicted_low_price.item()
+    _h = predicted_high_price.item()
+    _l = predicted_low_price.item()
+
+    # 保留两位小数
+    _h = round(_h, 2)
+    _l = round(_l, 2)
+    return _h, _l
