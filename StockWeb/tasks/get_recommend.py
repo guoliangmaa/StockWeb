@@ -38,7 +38,10 @@ def run():
         if idx not in unique_list:
             code = stock_code_list[idx]
             name = stock_name_list[idx]
-            df = predict_future(code)
+            try:
+                df = predict_future(code)
+            except Exception:
+                continue
             if is_recommended_easy(df):
                 # print(df)
                 stock_count += 1
@@ -106,7 +109,7 @@ def predict_future(stock_code: str, future: int = 3) -> DataFrame:
     return df
 
 
-def is_recommended(df: DataFrame, future: int = 3) -> bool:
+def is_recommended(df: DataFrame, future: int = 3) -> bool: 
     """苛刻版 必须预测一直走增 才返回true"""
     sub = df.tail(future + 1).reset_index(drop=True)
     for i in range(future):

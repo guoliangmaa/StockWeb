@@ -16,6 +16,7 @@ from StockWeb.models.lstm.train_and_predict import lstm_predict
 from StockWeb.utils.database import insert, select
 from StockWeb.utils.next_day import next_workday, next_workday_str
 from StockWeb.utils.database_stock import recommend_stock, stock_meta
+from StockWeb.utils.open_ai import gpt_35_api_stream
 
 
 class TestView(APIView):
@@ -60,6 +61,7 @@ class TestView(APIView):
             if item["code"] == code:
                 print(f"该股票 {code} 已在每日预测中计算过 无需重复训练")
                 self.msg["data"] = item["df"]
+                self.msg["analysis"] = self.analyse_stock(stock_code, item["df"])
                 response = Response(data=self.msg)
                 response['Access-Control-Allow-Origin'] = "*"
                 return response
@@ -261,9 +263,19 @@ class TestView(APIView):
 
         self.history.replace([float('inf'), float('-inf')], float('nan'), inplace=True)
         self.history.fillna(0, inplace=True)
+
+        self.msg["analysis"] = self.analyse_stock(_config.stock_code, self.history)
         self.msg["predictions"] = arr
         self.msg["errors"] = errors
         self.msg["data"] = self.history
         response = Response(data=self.msg)
         response['Access-Control-Allow-Origin'] = "*"
         return response
+
+    def analyse_stock(self, stock_code: str = '000001', df: DataFrame = None) -> str:
+        messages = [{'role': 'user',
+                     'content': f'帮我分析一下股票 {stock_code} 直接分析 不用写问候消息 告诉我确定的信息 不确定的直接省略 不要分点 200字左右'},
+                    ]
+        res = gpt_35_api_stream(messages)
+
+        return res
