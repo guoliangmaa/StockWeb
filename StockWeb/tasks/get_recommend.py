@@ -15,11 +15,13 @@ begin = (datetime.today() - timedelta(days=240)).strftime("%Y%m%d")
 
 # 首先需要获取所有的股票代码
 data = ts.stock_basic()
+# 将基础数据存入数据库中
+engin = get_mysql_engine(database="predict_stock")
 
 
 # print(data)
 
-def run():
+def recommend_stock():
     stock_code_list = data["ts_code"].values
     stock_name_list = data["name"].values
     length = len(stock_code_list)
@@ -29,8 +31,6 @@ def run():
     stock_count = 0
     unique_list = set()
 
-    # 将基础数据存入数据库中
-    engin = get_mysql_engine(database="predict_stock")
     data.to_sql(name="stock_basic", con=engin, if_exists="replace")
 
     while stock_count < 10:
@@ -66,6 +66,44 @@ def run():
         connection.execute(sql, sql_parameter)
         connection.commit()
         # res = connection.execute("select * from recommend")
+
+
+def warning_stock():
+    stock_list = ["002142", "600036", "600000", "601020", "003035", "600008", "600016", "600225", "600598", "600751"]
+    # 首先我们得先从 dataframe 中找到股票的数据信息
+    stock_list_meta = []
+    for stock in stock_list:
+        res = data[data['symbol'] == stock]
+        stock_list_meta.append({
+            "code": res['ts_code'].values[0],
+            "name": res['name'].values[0]
+        })
+
+    res_json = []
+    for item in stock_list_meta:
+        df = predict_future(item["code"])
+        res_json.append((today, item["code"], item["name"], df, 1 if is_down_easy(df) else 0))
+
+    sql = text(
+        "insert into warning (date, stock_code, stock_name, data, warning) values (:date, :stock_code, :stock_name, :data, :warning)")
+    sql_parameter = []
+    for item in res_json:
+        date, stock_code, stock_name, df, warning = item
+        df_string = df.to_csv(index=False)
+        dat = {
+            "date": date,
+            "stock_code": stock_code,
+            "stock_name": stock_name,
+            "data": df_string,
+            "warning": warning
+        }
+        sql_parameter.append(dat)
+
+    with engin.connect() as connection:
+        # print(connection)
+        connection.execute(sql, sql_parameter)
+        connection.commit()
+    print(stock_list_meta)
 
 
 def predict_future(stock_code: str, future: int = 3) -> DataFrame:
@@ -109,7 +147,7 @@ def predict_future(stock_code: str, future: int = 3) -> DataFrame:
     return df
 
 
-def is_recommended(df: DataFrame, future: int = 3) -> bool: 
+def is_recommended(df: DataFrame, future: int = 3) -> bool:
     """苛刻版 必须预测一直走增 才返回true"""
     sub = df.tail(future + 1).reset_index(drop=True)
     for i in range(future):
@@ -131,5 +169,16 @@ def is_recommended_easy(df: DataFrame, future: int = 3) -> bool:
     return end > head
 
 
+def is_down_easy(df: DataFrame, future: int = 3) -> bool:
+    """简易版 预测的最后的一天比当前的价格降低 返回true"""
+    sub = df.tail(future + 1).reset_index(drop=True)
+    head = sub.iloc[0]["high"]
+    end = sub.iloc[future]["high"]
+
+    # print(f"当前价格{head} 预测未来{future}天价格 {end}")
+    return end < head
+
+
 if __name__ == '__main__':
-    run()
+    # recommend_stock()
+    warning_stock()

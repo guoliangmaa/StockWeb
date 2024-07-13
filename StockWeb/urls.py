@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path
-from .views import test_view, recommend_stock_view, tts_view
+from .views import test_view, recommend_stock_view, tts_view, warning_stock_view
 # 配置静态和媒体文件的访问
 from django.conf import settings
 from django.conf.urls.static import static
@@ -27,6 +27,7 @@ urlpatterns = [
     re_path("api/test", test_view.TestView.as_view()),
     path("api/stock/recommend", recommend_stock_view.RecommendStockView.as_view()),
     path("api/stock/tts", tts_view.TTSView.as_view()),
+    path("api/stock/warning", warning_stock_view.WarningStockView.as_view()),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

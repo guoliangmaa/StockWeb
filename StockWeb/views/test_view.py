@@ -15,7 +15,7 @@ from StockWeb.models.lstm.train_and_predict import lstm_train_using_high_and_low
 from StockWeb.models.lstm.train_and_predict import lstm_predict
 from StockWeb.utils.database import insert, select
 from StockWeb.utils.next_day import next_workday, next_workday_str
-from StockWeb.utils.database_stock import recommend_stock, stock_meta
+from StockWeb.utils.database_stock import recommend_stock, stock_meta, warning_stock
 from StockWeb.utils.open_ai import gpt_35_api_stream
 
 
@@ -50,10 +50,11 @@ class TestView(APIView):
         # 获取股票所对应的名称
         self.msg["meta"] = stock_meta(code)
 
-        # 判断是否位于每日推荐 如果是 则不用重复训练预测
+        # 判断是否位于每日推荐 和一直检测的那几只股票 如果是 则不用重复训练预测
         saved_recommend = recommend_stock()
-        for item in saved_recommend:
-            id, _date, _code, name, df = item
+        saved_warning = warning_stock()
+        for item in saved_recommend + saved_warning:
+            # id, _date, _code, name, df = item
             # print(f"id: {id}, date: {_date}, code: {code}, df: {df}")
             # print(_code)
             print(item)

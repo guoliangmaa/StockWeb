@@ -27,6 +27,8 @@
   - 无参数
 - /api/stock/tts 语音转文字接口
   - 参数:text 文本
+- /api/stock/warning 预警股票信息(未来三天会跌)
+  - 无参数
 
 
 > 注: 每天开盘前运行 StockWeb/tasks/get_recommend.py 以获得当日推荐
