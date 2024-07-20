@@ -1,3 +1,7 @@
+import platform
+if platform.system() == "Linux":
+    import sys
+    sys.path.append('/home/mgl/StockWeb')
 from datetime import datetime, timedelta
 import random
 import pandas as pd
