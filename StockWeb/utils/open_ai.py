@@ -8,7 +8,8 @@ client = OpenAI(
 
 def gpt_35_api_stream(messages: list):
     stream = client.chat.completions.create(
-        model='gpt-3.5-turbo',
+        # model='gpt-3.5-turbo',
+        model='gpt-4o-mini',
         messages=messages,
         stream=True,
     )
@@ -26,5 +27,6 @@ def gpt_35_api_stream(messages: list):
 # 请妥善保管，不要泄露给他人，如泄漏造成滥用可能会导致Key被封禁
 
 if __name__ == '__main__':
-    messages = [{'role': 'user', 'content': '帮我分析一下股票000001 直接分析 不用写问候消息 告诉我确定的信息 不确定的直接省略 不要分点 200字左右'}, ]
+    messages = [{'role': 'user',
+                 'content': '我这有一支股票，股票代码为000003，过去十天的收盘价分别为：8.75，8.73，8.73，8.57，8.34，8.49，8.28，8.44，8.45，8.59，预测的未来三天的收盘价为9.03，9.02，9.01。根据我给出的这些信息，请给出我这支股票的相关信息（对应的公司介绍）以及投资建议。相关信息少一点介绍，300字左右，不要分点'}, ]
     print(gpt_35_api_stream(messages))

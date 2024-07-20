@@ -1,8 +1,6 @@
 import asyncio
-from typing import BinaryIO
-
+import uuid
 import edge_tts
-from django.http import FileResponse
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -37,6 +35,7 @@ class TTSView(APIView):
         self.TEXT = request.POST.get("text",
                                      "这可以确保你在打印文件对象时，所有数据已经成功写入。下面是一个更新的示例，演示如何在写入操作完成后检查文件的大小")
         print(f"post method, path = {request.get_full_path()}")
+        self.OUTPUT_FILE = f"media/{uuid.uuid4()}.mp3"
         asyncio.run(self.get_voice())
         self.msg["url"] = self.OUTPUT_FILE
         response = Response(data=self.msg)

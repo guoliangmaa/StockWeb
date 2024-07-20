@@ -274,8 +274,20 @@ class TestView(APIView):
         return response
 
     def analyse_stock(self, stock_code: str = '000001', df: DataFrame = None) -> str:
+
+        high_values = df["high"].values[-3:]
+        low_values = df["low"].values[-3:]
+        close_values = df["close"].values[-13:]
+
+        close_str = "最近10个工作日的收盘价为: " + " ".join(f"{value:.2f}" for value in close_values)
+        predict_str = "我们的算法预测未来三个工作日的最高价为: " + " ".join(
+            f"{value:.2f}" for value in high_values) + "最低价为: " + " ".join(f"{value:.2f}" for value in low_values)
+
+        stock_name = self.msg["meta"]["name"]
+        stock_code = self.msg["meta"]["ts_code"]
+
         messages = [{'role': 'user',
-                     'content': f'帮我分析一下股票 {stock_code} 直接分析 不用写问候消息 告诉我确定的信息 不确定的直接省略 不要分点 200字左右'},
+                     'content': f'我这有一支股票，股票代码为{stock_code}，股票对应企业名称为{stock_name}，{close_str}, {predict_str}根据我给出的这些信息，请给出我这支股票的相关信息（对应的公司介绍）以及投资建议。重点介绍一下价格给出的趋势（最近十个工作日和未来三个工作日都包括），公司介绍相关信息少一点介绍，300字左右,不用分点'},
                     ]
         res = gpt_35_api_stream(messages)
 

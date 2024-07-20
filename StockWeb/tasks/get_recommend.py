@@ -1,13 +1,16 @@
 from datetime import datetime, timedelta
 import random
-
 import pandas as pd
 from pandas import DataFrame
 from sqlalchemy import text
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+import time
 from StockWeb.utils.factory import get_tushare, get_mysql_engine
 from StockWeb.models.lstm.train_and_predict import lstm_train_using_high_and_low, lstm_predict
 from StockWeb.utils.Config import config
 from StockWeb.utils.next_day import next_workday_str, recent_workday
+from StockWeb.utils.mail_util import send_email
 
 ts = get_tushare()
 today = datetime.today().strftime("%Y%m%d")
@@ -179,6 +182,23 @@ def is_down_easy(df: DataFrame, future: int = 3) -> bool:
     return end < head
 
 
-if __name__ == '__main__':
-    # recommend_stock()
+def task():
+    recommend_stock()
     warning_stock()
+    send_email(f"{today}股票信息")
+
+
+if __name__ == '__main__':
+    # 创建调度器
+    scheduler = BackgroundScheduler()
+    # 使用 CronTrigger 创建每天 6 点 30 分钟执行的任务
+    scheduler.add_job(task, CronTrigger(hour=0, minute=30))
+    # 启动调度器
+    scheduler.start()
+
+    try:
+        while True:
+            time.sleep(60)
+    except (KeyboardInterrupt, SystemExit):
+        # 关闭调度器
+        scheduler.shutdown()

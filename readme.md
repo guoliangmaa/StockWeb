@@ -11,14 +11,16 @@
 > pip install sqlalchemy pymysql  
 > pip install chinesecalendar (应该每年更新该包 11月前后国务院发布通知)   
 > pip install edge-tts   
+> pip install openai  
+> pip install apscheduler  
 > 
 
 
 
 ---
 服务器部署命令
-> nohup python manage.py runserver 0.0.0.0:8080 &> output.log &
-> 
+> nohup python manage.py runserver 0.0.0.0:8080 &> output.log &   
+> nohup python get_recommend.py &> output.log &
 ---
 接口文档
 - /api/test 单只股票预测 未来三天(最大值和最小值)
