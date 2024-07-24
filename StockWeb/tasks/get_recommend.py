@@ -1,6 +1,8 @@
 import platform
+
 if platform.system() == "Linux":
     import sys
+
     sys.path.append('/home/mgl/StockWeb')
 from datetime import datetime, timedelta
 import random
@@ -17,16 +19,24 @@ from StockWeb.utils.next_day import next_workday_str, recent_workday
 from StockWeb.utils.mail_util import send_email
 
 ts = get_tushare()
+# 将基础数据存入数据库中
+engin = get_mysql_engine(database="predict_stock")
+
 today = datetime.today().strftime("%Y%m%d")
 begin = (datetime.today() - timedelta(days=240)).strftime("%Y%m%d")
 
 # 首先需要获取所有的股票代码
 data = ts.stock_basic()
-# 将基础数据存入数据库中
-engin = get_mysql_engine(database="predict_stock")
 
 
-# print(data)
+def init_parameters():
+    global today, begin, data
+    today = datetime.today().strftime("%Y%m%d")
+    begin = (datetime.today() - timedelta(days=240)).strftime("%Y%m%d")
+
+    # 首先需要获取所有的股票代码
+    data = ts.stock_basic()
+
 
 def recommend_stock():
     stock_code_list = data["ts_code"].values
@@ -187,22 +197,25 @@ def is_down_easy(df: DataFrame, future: int = 3) -> bool:
 
 
 def task():
+    print(f"{datetime.now()} 任务开始")
+    init_parameters()
     recommend_stock()
     warning_stock()
     send_email(f"{today}股票信息")
+    print(f"{datetime.now()} 任务结束")
 
 
 if __name__ == '__main__':
     # 创建调度器
     scheduler = BackgroundScheduler()
-    # 使用 CronTrigger 创建每天 6 点 30 分钟执行的任务
+    # 使用 CronTrigger 创建每天 0 点 30 分钟执行的任务
     scheduler.add_job(task, CronTrigger(hour=0, minute=30))
     # 启动调度器
     scheduler.start()
 
     try:
         while True:
-            time.sleep(60)
+            time.sleep(10)
     except (KeyboardInterrupt, SystemExit):
         # 关闭调度器
         scheduler.shutdown()

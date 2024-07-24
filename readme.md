@@ -18,9 +18,9 @@
 
 
 ---
-服务器部署命令
-> nohup python manage.py runserver 0.0.0.0:8080 &> output.log &   
-> nohup python get_recommend.py &> output.log &
+服务器部署命令 进入StockWeb文件夹 (第一个)
+> nohup python manage.py runserver 0.0.0.0:8080 &> main.log &   
+> nohup python StockWeb/tasks/get_recommend.py &> recommend.log &
 ---
 接口文档
 - /api/test 单只股票预测 未来三天(最大值和最小值)
