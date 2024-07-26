@@ -48,7 +48,14 @@ def recommend_stock():
     stock_count = 0
     unique_list = set()
 
-    data.to_sql(name="stock_basic", con=engin, if_exists="replace")
+    with engin.connect() as connection:
+        trans = connection.begin()
+        try:
+            data.to_sql(name="stock_basic", con=connection, if_exists="replace")
+            trans.commit()
+        except Exception as e:
+            trans.rollback()
+            print(f"Error in saving stock basic to database: {e}")
 
     while stock_count < 10:
         idx = random.randint(1, length)
@@ -79,10 +86,15 @@ def recommend_stock():
         sql_parameter.append(dat)
 
     with engin.connect() as connection:
-        # print(connection)
-        connection.execute(sql, sql_parameter)
-        connection.commit()
-        # res = connection.execute("select * from recommend")
+        trans = connection.begin()
+        try:
+            connection.execute(sql, sql_parameter)
+            trans.commit()
+        except Exception as e:
+            trans.rollback()
+            print(f"Error in saving recommend stock to database: {e}")
+        finally:
+            connection.close()
 
 
 def warning_stock():
@@ -117,9 +129,15 @@ def warning_stock():
         sql_parameter.append(dat)
 
     with engin.connect() as connection:
-        # print(connection)
-        connection.execute(sql, sql_parameter)
-        connection.commit()
+        trans = connection.begin()
+        try:
+            connection.execute(sql, sql_parameter)
+            trans.commit()
+        except Exception as e:
+            trans.rollback()
+            print(f"Error in saving warning stock to database: {e}")
+        finally:
+            connection.close()
     print(stock_list_meta)
 
 
