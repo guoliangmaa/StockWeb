@@ -18,7 +18,9 @@ class WarningStockView(APIView):
         result = warning_stock()
         print(result)
 
-        self.msg["data"] = result
+        reduced_res = [item for item in result if item['warning'] == 1]
+        self.msg["data"] = reduced_res[:10]
+        self.msg["origin_data"] = result
         response = Response(data=self.msg)
         response['Access-Control-Allow-Origin'] = "*"
         return response
